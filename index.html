@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>Junction: draw every vehicle a path</title>
+    <meta name="description" content="Cars, vans and trucks drive in from every side. Draw each one a path to its bay with your finger, and don't let them touch. It starts calm." />
+    <meta name="theme-color" content="#f2eee5" />
+    <meta property="og:title" content="Junction" />
+    <meta property="og:description" content="Draw every car and truck a path to its bay. Don't let them touch." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <canvas id="field" aria-label="The yard. Drag from a vehicle to draw its path."></canvas>
+    <div id="field-slot" class="field-slot" aria-hidden="true"></div>
+
+    <header class="hud" id="hud" hidden>
+      <div class="hud-score" aria-live="polite">
+        <span class="hud-number" id="score">0</span>
+        <span class="hud-label">delivered</span>
+      </div>
+      <p class="hud-mode" id="mode"></p>
+    </header>
+
+    <button class="icon-btn" id="mute" type="button" aria-pressed="false" aria-label="Mute sound">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor" />
+        <path class="waves" d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        <path class="cross" d="M16 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
+    </button>
+
+    <p class="hint" id="hint" hidden></p>
+
+    <main class="start" id="start">
+      <div class="start-text">
+        <h1 class="wordmark">Junction</h1>
+        <p class="lede">Draw each one a path to its bay. Don’t let them touch.</p>
+        <div class="actions">
+          <button class="btn" id="play-daily" type="button">Play today’s round</button>
+          <button class="link" id="play-free" type="button">Free play</button>
+        </div>
+        <p class="meta"><span id="today"></span><span id="start-best"></span></p>
+      </div>
+      <div class="start-demo" id="demo-slot" aria-hidden="true"></div>
+      <p class="credit">A small game by <a href="https://pratyushshivam.com" rel="noopener">Pratyush Shivam</a></p>
+    </main>
+
+    <section class="card-wrap" id="card" hidden aria-live="polite">
+      <div class="card" role="dialog" aria-label="Round over">
+        <p class="card-kicker" id="card-kicker"></p>
+        <p class="card-score" id="card-score">0</p>
+        <p class="card-unit" id="card-unit">delivered</p>
+        <p class="card-best"><span id="card-best"></span><span class="card-new" id="card-new" hidden>New best</span></p>
+        <div class="card-actions">
+          <button class="btn" id="again" type="button">Play again</button>
+          <button class="btn btn-quiet" id="share" type="button">Share</button>
+        </div>
+        <button class="link" id="switch" type="button"></button>
+      </div>
+    </section>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
