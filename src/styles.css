@@ -227,6 +227,10 @@ body {
 
 .start-text {
   pointer-events: auto;
+  min-width: 0;
+}
+
+.start-text > :not(.wordmark) {
   max-width: 34rem;
 }
 
@@ -236,6 +240,8 @@ body {
   font-weight: 600;
   line-height: 0.92;
   letter-spacing: -0.055em;
+  /* The orange dot is part of the word: never let it drop to its own line. */
+  white-space: nowrap;
 }
 
 .wordmark::after {
@@ -371,7 +377,7 @@ body {
   }
 
   .wordmark {
-    font-size: clamp(64px, 9.5vw, 148px);
+    font-size: clamp(64px, 8.4vw, 136px);
   }
 }
 
