@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Draw every car and truck a path to its bay. Don't let them touch.",
+  "homepage": "https://pratyushshivam.github.io/junction/",
   "license": "MIT",
   "scripts": {
     "dev": "vite --port 5220",
