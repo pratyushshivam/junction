@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-    <title>Junction: draw every vehicle a path</title>
-    <meta name="description" content="Cars, vans and trucks drive in from every side. Draw each one a path to its bay with your finger, and don't let them touch. It starts calm." />
+    <title>Junction: draw every car a path home</title>
+    <meta name="description" content="Cars, vans and trucks drive in from every side. Draw each one a path to the garage of its colour, and don't let them bump. It starts calm." />
     <meta name="theme-color" content="#f2eee5" />
     <meta property="og:title" content="Junction" />
-    <meta property="og:description" content="Draw every car and truck a path to its bay. Don't let them touch." />
+    <meta property="og:description" content="Draw every car and truck a path to the garage of its colour. Don't let them bump." />
     <meta property="og:type" content="website" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./src/styles.css" />
@@ -21,6 +21,7 @@
         <span class="hud-number" id="score">0</span>
         <span class="hud-label">delivered</span>
       </div>
+      <div class="hud-lives" id="lives" role="img" aria-label="3 hearts left"></div>
       <p class="hud-mode" id="mode"></p>
     </header>
 
@@ -37,7 +38,7 @@
     <main class="start" id="start">
       <div class="start-text">
         <h1 class="wordmark">Junction</h1>
-        <p class="lede">Draw each one a path to its bay. Don’t let them touch.</p>
+        <p class="lede">Draw each car a path to the garage of its colour. Don’t let them bump.</p>
         <div class="actions">
           <button class="btn" id="play-daily" type="button">Play today’s round</button>
           <button class="link" id="play-free" type="button">Free play</button>

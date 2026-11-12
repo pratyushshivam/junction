@@ -36,6 +36,9 @@ export class Sound {
 
   vibrate(pattern: number | number[]): void {
     if (this.muted) return;
+    // Browsers refuse (and log) vibration before the first real tap.
+    const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+    if (activation && !activation.hasBeenActive) return;
     try {
       navigator.vibrate?.(pattern);
     } catch {
@@ -103,6 +106,12 @@ export class Sound {
     this.tone(392, 0, 0.3, 0.05);
     this.tone(494, 0.1, 0.3, 0.05);
     this.tone(587, 0.2, 0.5, 0.05);
+  }
+
+  /** Two vehicles touched, but there are hearts left. */
+  bump(): void {
+    this.vibrate(40);
+    this.tone(150, 0, 0.3, 0.3, "sine", 55);
   }
 
   crash(): void {

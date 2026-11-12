@@ -109,6 +109,45 @@ body {
   }
 }
 
+.hud-lives {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+
+.hud-lives svg {
+  width: 22px;
+  height: 22px;
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  transition:
+    fill 200ms ease,
+    stroke 200ms ease;
+}
+
+.hud-lives svg.lost {
+  fill: transparent;
+  stroke: var(--rule);
+}
+
+.hud-lives svg.pop {
+  animation: pop 420ms ease-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1.6);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .hud-label,
 .hud-mode {
   font-size: 14px;
@@ -415,6 +454,12 @@ body {
   gap: 10px;
 }
 
+.card-actions .btn {
+  padding-left: 12px;
+  padding-right: 12px;
+  white-space: nowrap;
+}
+
 .card .link {
   margin-top: 8px;
   font-size: 15px;
@@ -439,6 +484,26 @@ body {
 
   .credit {
     display: none;
+  }
+
+  .start {
+    padding-top: calc(var(--safe-top) + 20px);
+    padding-bottom: calc(var(--safe-bottom) + 20px);
+    padding-right: 68px;
+  }
+}
+
+@media (max-width: 520px) {
+  /* A phone has no room for the round's name beside the hearts; the end card says it. */
+  .hud-mode {
+    display: none;
+  }
+
+  .hud-lives {
+    left: auto;
+    right: calc(var(--gutter) + 50px);
+    transform: none;
+    bottom: 16px;
   }
 }
 

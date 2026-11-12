@@ -5,6 +5,7 @@ import {
   endPath,
   extendPath,
   KINDS,
+  LIVES,
   step,
   STEP,
   type GameEvent,
@@ -28,6 +29,7 @@ const demoSlot = el("demo-slot");
 const hud = el("hud");
 const scoreEl = el("score");
 const modeEl = el("mode");
+const livesEl = el("lives");
 const muteBtn = el<HTMLButtonElement>("mute");
 const hintEl = el("hint");
 const startEl = el("start");
@@ -98,9 +100,23 @@ function startRound(next: RoundKind): void {
   renderer.fit(round, rect);
   acc = 0;
   scoreEl.textContent = "0";
+  showLives();
   modeEl.textContent = kind === "daily" ? `Today · ${dateLabel(today).replace(/ \d{4}$/, "")}` : "Free play";
   shareBtn.textContent = "Share";
-  showHint(teaching ? "Drag from the car to its matching bay" : "", Infinity);
+  showHint(teaching ? "Drag the car to the garage of its colour" : "", Infinity);
+}
+
+const HEART =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C5.5 15.6 3 12.4 3 9a4.6 4.6 0 0 1 9-1.5A4.6 4.6 0 0 1 21 9c0 3.4-2.5 6.6-9 11.5z"/></svg>';
+
+function showLives(lost = false): void {
+  if (livesEl.childElementCount !== LIVES) livesEl.innerHTML = HEART.repeat(LIVES);
+  const left = Math.max(0, round.lives);
+  [...livesEl.children].forEach((heart, i) => {
+    heart.classList.toggle("lost", i >= left);
+    heart.classList.toggle("pop", lost && i === left);
+  });
+  livesEl.setAttribute("aria-label", `${left} ${left === 1 ? "heart" : "hearts"} left`);
 }
 
 function showHint(text: string, seconds: number): void {
@@ -126,7 +142,6 @@ function showCard(): void {
   switchBtn.textContent = kind === "daily" ? "Try a random round" : "Play today’s round";
   hintEl.hidden = true;
   cardEl.hidden = false;
-  el<HTMLButtonElement>("again").focus({ preventScroll: true });
 }
 
 function onEvent(e: GameEvent, now: number): void {
@@ -146,12 +161,18 @@ function onEvent(e: GameEvent, now: number): void {
       round.calm = false;
       // Do not leave the yard empty for long after the lesson.
       round.untilAnnounce = Math.min(round.untilAnnounce, 1.2);
-      showHint("Now keep them apart: two touching ends the round", 5);
+      showHint("Don’t let them bump. You have three hearts.", 5);
     }
   } else if (e.type === "bay") {
     sound.newBay();
+  } else if (e.type === "bump") {
+    sound.bump();
+    showLives(true);
+    // The vehicles are gone, so any finger still drawing for them lets go.
+    for (const [finger, vehicle] of fingers) if (vehicle === e.a || vehicle === e.b) fingers.delete(finger);
   } else if (e.type === "crash") {
     sound.crash();
+    showLives(true);
     mode = "crash";
     crashAt = now;
     fingers.clear();
@@ -246,7 +267,7 @@ switchBtn.addEventListener("click", () => play(kind === "daily" ? "free" : "dail
 shareBtn.addEventListener("click", () => {
   const url = location.protocol.startsWith("http") ? location.origin + location.pathname : "";
   void copyText(shareText(round.score, kind, today, url)).then((ok) => {
-    shareBtn.textContent = ok ? "Copied" : "Copy failed";
+    shareBtn.textContent = ok ? "Copied" : "Not copied";
     window.setTimeout(() => (shareBtn.textContent = "Share"), 1800);
   });
 });
@@ -290,9 +311,11 @@ function tick(now: number, dt: number, paint = true): void {
 
 function frame(ms: number): void {
   const now = ms / 1000;
-  const dt = Math.min(0.1, Math.max(0, now - last));
-  last = now;
-  if (!manual) tick(now, dt);
+  if (!manual) {
+    const dt = Math.min(0.1, Math.max(0, now - last));
+    last = now;
+    tick(now, dt);
+  }
   requestAnimationFrame(frame);
 }
 
@@ -330,7 +353,7 @@ function boot(): void {
     });
   }
   requestAnimationFrame((ms) => {
-    last = ms / 1000;
+    if (!manual) last = ms / 1000;
     requestAnimationFrame(frame);
   });
 }
