@@ -2,7 +2,7 @@
  * The whole game as a pure, deterministic simulation. No DOM, no clocks, no
  * Math.random: a round is a seed, a field shape and the paths the player draws.
  */
-import { baysForScore, gapAfter, kindFor, KINDS, MAX_BAYS, type Kind } from "./difficulty";
+import { baysForScore, gapAfter, kindFor, KINDS, LIVES, MAX_BAYS, type Kind } from "./difficulty";
 import { clamp, distPointSegment, distSegments, rotateToward, wrapAngle, type Vec } from "./geometry";
 import { mulberry32 } from "./rng";
 
@@ -19,15 +19,15 @@ const TURN_ZONE = 8;
 /** Seconds of warning before a vehicle drives in. */
 export const LEAD = 2.4;
 /** A line ending this close to the matching bay snaps to it. */
-export const SNAP = 7.5;
-export const PARK_TIME = 0.8;
+export const SNAP = 9;
+export const PARK_TIME = 0.7;
 const MIN_POINT_GAP = 1.2;
 const TURN_RADIUS = 5;
 const BODY_TURN_RATE = 7;
 const WARN_EVERY = 4;
 
-export const BAY_WIDTH = 11;
-export const BAY_HEIGHT = 15;
+/** Garages are square pads this wide. */
+export const BAY_SIZE = 15;
 
 /** Bay centres as fractions of the field, so the same layout works in any shape. */
 export const BAY_LAYOUT: readonly { u: number; v: number }[] = [
@@ -95,6 +95,9 @@ export type GameEvent =
   | { type: "spawn"; id: number }
   | { type: "deliver"; id: number; bay: number; x: number; y: number }
   | { type: "bay"; bay: number }
+  /** Two vehicles touched and were taken off the field; the round goes on. */
+  | { type: "bump"; a: number; b: number; x: number; y: number; lives: number }
+  /** The last bump: the round is over. */
   | { type: "crash"; a: number; b: number; x: number; y: number };
 
 export interface RoundOptions {
@@ -102,6 +105,8 @@ export interface RoundOptions {
   calm?: boolean;
   /** Set false to let vehicles pass through each other (tests and demos). */
   collide?: boolean;
+  /** How many bumps the round allows. */
+  lives?: number;
 }
 
 export interface Round {
@@ -111,6 +116,8 @@ export interface Round {
   time: number;
   tick: number;
   score: number;
+  /** Bumps left before the round ends. */
+  lives: number;
   over: boolean;
   calm: boolean;
   collide: boolean;
@@ -153,6 +160,7 @@ export function createRound(seed: number, aspect: number, options: RoundOptions 
     time: 0,
     tick: 0,
     score: 0,
+    lives: options.lives ?? LIVES,
     over: false,
     calm: options.calm ?? false,
     collide: options.collide ?? true,
@@ -354,9 +362,6 @@ function park(r: Round, v: Vehicle): void {
 function move(r: Round, v: Vehicle): void {
   if (v.phase === "parking") {
     v.parkT += STEP;
-    // Straighten up in the slot: bays stand upright, so point up or down, whichever is nearer.
-    const target = Math.sin(v.heading) >= 0 ? Math.PI / 2 : -Math.PI / 2;
-    v.heading = rotateToward(v.heading, target, 5 * STEP);
     return;
   }
   v.age += STEP;
@@ -481,10 +486,19 @@ function findCrash(r: Round): void {
       const a = live[i]!;
       const b = live[j]!;
       if (!touching(a, b)) continue;
-      r.over = true;
-      r.crash = { a: a.id, b: b.id, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-      r.warnings = [[a.id, b.id]];
-      r.events.push({ type: "crash", ...r.crash });
+      const hit = { a: a.id, b: b.id, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      r.lives--;
+      if (r.lives <= 0) {
+        r.over = true;
+        r.crash = hit;
+        r.warnings = [[a.id, b.id]];
+        r.events.push({ type: "crash", ...hit });
+      } else {
+        // Both are towed away and the round carries on.
+        r.vehicles = r.vehicles.filter((v) => v !== a && v !== b);
+        r.warnings = [];
+        r.events.push({ type: "bump", ...hit, lives: r.lives });
+      }
       return;
     }
   }
@@ -533,6 +547,7 @@ export function snapshot(r: Round): string {
   return JSON.stringify({
     time: r.time,
     score: r.score,
+    lives: r.lives,
     over: r.over,
     openBays: r.openBays,
     count: r.count,

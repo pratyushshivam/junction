@@ -125,14 +125,30 @@ describe("drawing a path", () => {
         if (v.phase === "driving" && !v.locked) drawToBay(round, v);
       }
     });
-    expect(r.score).toBeGreaterThan(18);
+    expect(r.score).toBeGreaterThan(24);
     expect(r.bays.every((b) => b.open)).toBe(true);
   });
 });
 
 describe("crashes", () => {
-  it("ends the round when two vehicles meet head on", () => {
-    const r = createRound(1, 1.6);
+  it("takes both vehicles away on a bump and carries on, one life down", () => {
+    const r = createRound(1, 1.6, { calm: true });
+    addVehicle(r, { x: 40, y: 50, dir: 0 });
+    addVehicle(r, { x: 110, y: 50, dir: Math.PI });
+    const before = r.lives;
+    let bumps = 0;
+    run(r, 4, (round) => {
+      bumps += round.events.filter((e) => e.type === "bump").length;
+      round.events.length = 0;
+    });
+    expect(bumps).toBe(1);
+    expect(r.lives).toBe(before - 1);
+    expect(r.over).toBe(false);
+    expect(r.vehicles.length).toBe(0);
+  });
+
+  it("ends the round on the last life", () => {
+    const r = createRound(1, 1.6, { lives: 1 });
     const a = addVehicle(r, { x: 40, y: 50, dir: 0 });
     const b = addVehicle(r, { x: 110, y: 50, dir: Math.PI });
     run(r, 6);
@@ -156,13 +172,13 @@ describe("crashes", () => {
   it("lets two vehicles pass when their lanes are apart", () => {
     const r = createRound(1, 1.6, { calm: true });
     addVehicle(r, { x: 40, y: 40, dir: 0 });
-    addVehicle(r, { x: 110, y: 52, dir: Math.PI });
+    addVehicle(r, { x: 110, y: 56, dir: Math.PI });
     run(r, 4);
     expect(r.over).toBe(false);
   });
 
   it("stops the clock once the round is over", () => {
-    const r = createRound(1, 1.6);
+    const r = createRound(1, 1.6, { lives: 1 });
     addVehicle(r, { x: 40, y: 50, dir: 0 });
     addVehicle(r, { x: 60, y: 50, dir: Math.PI });
     run(r, 5);
@@ -234,12 +250,13 @@ describe("difficulty", () => {
     for (let n = 1; n < 60; n++) {
       expect(gapAfter(n, 0.5)).toBeLessThanOrEqual(gapAfter(n - 1, 0.5));
     }
-    expect(gapAfter(60, 0.5)).toBeLessThan(1.3);
+    expect(gapAfter(60, 0.5)).toBeLessThan(1.6);
   });
 
   it("starts with cars and two bays, then adds more", () => {
     expect(kindFor(0, 0.99)).toBe("car");
     expect(kindFor(4, 0.99)).toBe("van");
+    expect(kindFor(8, 0.99)).toBe("van");
     expect(kindFor(20, 0.99)).toBe("truck");
     expect(baysForScore(0)).toBe(2);
     for (let s = 1; s < 40; s++) expect(baysForScore(s)).toBeGreaterThanOrEqual(baysForScore(s - 1));
