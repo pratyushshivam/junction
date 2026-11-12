@@ -1,0 +1,79 @@
+<!doctype html>
+<!--
+  The README banner and the social card, drawn with the game's own renderer.
+  Open through the dev server:  http://localhost:5220/scripts/banner.html      (banner, 1280 x 480)
+                                http://localhost:5220/scripts/banner.html?og   (social card, 1200 x 630)
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Junction banner</title>
+    <link rel="stylesheet" href="../src/styles.css" />
+    <style>
+      html, body { overflow: hidden; }
+      .sheet { position: fixed; inset: 0; display: grid; grid-template-columns: 46fr 54fr; align-items: center; gap: 56px; padding: 48px 56px 48px 72px; }
+      .words h1 { margin: 0; white-space: nowrap; font-size: 118px; font-weight: 600; line-height: 0.92; letter-spacing: -0.055em; }
+      .words h1::after { content: ""; display: inline-block; width: 0.13em; height: 0.13em; margin-left: 0.05em; border-radius: 50%; background: var(--accent); }
+      .words p { margin: 26px 0 0; padding-top: 22px; border-top: 1px solid var(--ink); font-size: 27px; line-height: 1.28; letter-spacing: -0.012em; max-width: 17em; }
+      .words small { display: block; margin-top: 18px; font-size: 17px; color: var(--ink-soft); }
+      #slot { height: 100%; }
+      body.og .sheet { grid-template-columns: 1fr; grid-template-rows: auto 1fr; gap: 30px; padding: 46px 60px 50px; }
+      body.og .words { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 40px; }
+      body.og .words h1 { font-size: 112px; }
+      body.og .words p { margin: 0 0 8px; padding: 0; border: 0; font-size: 26px; }
+      body.og .words small { display: none; }
+    </style>
+  </head>
+  <body>
+    <canvas id="field"></canvas>
+    <div class="sheet">
+      <div class="words">
+        <h1>Junction</h1>
+        <p>Draw every car a path to the garage of its colour. Don’t let them bump.<small>A one-finger game for the browser. It starts calm.</small></p>
+      </div>
+      <div id="slot"></div>
+    </div>
+    <script type="module">
+      import { addVehicle, beginPath, createRound, extendPath } from "../src/engine/index.ts";
+      import { Renderer } from "../src/game/draw.ts";
+      import { arc } from "../src/game/ghost.ts";
+      import { tagFor } from "../src/game/palette.ts";
+
+      const og = location.search.includes("og");
+      document.body.classList.toggle("og", og);
+      const canvas = document.getElementById("field");
+      const box = document.getElementById("slot").getBoundingClientRect();
+      const round = createRound(1, box.width / box.height, { collide: false });
+      for (const bay of round.bays) bay.open = true;
+      round.openBays = round.bays.length;
+      const W = round.width;
+      const H = round.height;
+
+      // A vehicle with a line drawn part of the way (or all the way) to its garage.
+      function send(kind, bay, x, y, bend, upTo) {
+        const target = round.bays[bay];
+        const v = addVehicle(round, { kind, bay, x: x * W, y: y * H, dir: 0 });
+        beginPath(round, v.id);
+        for (let i = 1; i <= 40 && i / 40 <= upTo; i++) extendPath(round, v.id, arc(v, target, bend, i / 40));
+        const next = v.path[v.next] ?? target;
+        v.dir = v.heading = Math.atan2(next.y - v.y, next.x - v.x);
+        return v;
+      }
+      send("car", 0, 0.52, 0.14, -0.12, 1);
+      send("van", 2, 0.93, 0.62, 0.16, 1);
+      const drawn = send("truck", 1, 0.3, 0.9, -0.2, 0.62);
+      const free = addVehicle(round, { kind: "car", bay: 4, x: 0.12 * W, y: 0.5 * H, dir: 0 });
+      free.heading = 0;
+      round.arrivals.push({ n: 9, edge: 0, kind: "car", bay: 3, x: 0.86 * W, y: 0, dir: Math.PI / 2, eta: 1 });
+
+      const tip = drawn.path[drawn.path.length - 1];
+      const ghost = { x: tip.x, y: tip.y, alpha: 1, trail: [], color: tagFor(1).color };
+      const renderer = new Renderer(canvas);
+      await document.fonts.ready;
+      renderer.resize();
+      renderer.fit(round, { x: box.left, y: box.top, w: box.width, h: box.height });
+      renderer.draw(round, 0.2, 0, ghost);
+      document.body.dataset.ready = "1";
+    </script>
+  </body>
+</html>
