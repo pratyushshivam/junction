@@ -1,8 +1,9 @@
 /** Colours and tag shapes. Every bay has both, so the game never relies on colour alone. */
 
 export const PAPER = "#f2eee5";
-export const YARD = "#f7f4ec";
+export const YARD = "#f9f6ef";
 export const INK = "#15140f";
+export const WHITE = "#fffdf8";
 
 export type Shape = "circle" | "square" | "triangle" | "diamond" | "plus";
 
@@ -16,7 +17,7 @@ export const TAGS: readonly Tag[] = [
   { color: "#d4491a", shape: "circle", name: "orange circle" },
   { color: "#2a5c8f", shape: "square", name: "blue square" },
   { color: "#3c7a52", shape: "triangle", name: "green triangle" },
-  { color: "#b98816", shape: "diamond", name: "ochre diamond" },
+  { color: "#c9930f", shape: "diamond", name: "ochre diamond" },
   { color: "#7a4a86", shape: "plus", name: "plum plus" },
 ];
 
