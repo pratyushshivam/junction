@@ -1,0 +1,21 @@
+{
+  "name": "junction",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Draw every car and truck a path to its bay. Don't let them touch.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite --port 5220",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 5221",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  }
+}
